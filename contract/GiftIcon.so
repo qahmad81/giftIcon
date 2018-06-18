@@ -1,0 +1,314 @@
+pragma solidity ^0.4.16;
+pragma experimental ABIEncoderV2;
+
+contract GiftIcon {
+    
+  address public owner;
+
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
+    
+    struct Item {
+      uint32 model; 
+      uint32 released;
+    }
+    Item[] items;
+    
+    struct Offer {
+      uint item; 
+      uint price;
+    }
+    Offer[] offers;
+
+    
+    mapping (uint => address) public itemToOwner;
+    mapping (address => uint) ownerItemCount;
+
+    
+    mapping (uint32 => uint32) ToolReadyTime;
+
+    struct ItemInfo {
+      string name; 
+      uint8 repetition;
+    }
+
+    mapping (uint32 => ItemInfo) itemInfo;
+    uint32[] itemInfoIndex;
+    uint32 contractStartTime;
+    uint32 lastNewGift;
+    uint32 newGiftTimedown = 86400;
+    uint32 newGiftCount = 100;
+    uint newGiftPrice = 0.001 ether;
+    uint lowerPrice = 0.0005 ether;
+    
+    function GiftIcon() public {
+        owner = msg.sender;
+        
+        itemInfo[1001] = ItemInfo("Daisy", 100);
+        itemInfoIndex.push(1001);
+        itemInfo[1002] = ItemInfo("Begonia", 100);
+        itemInfoIndex.push(1002);
+        itemInfo[1003] = ItemInfo("Dahlia", 75);
+        itemInfoIndex.push(1003);
+        itemInfo[1004] = ItemInfo("Chrysanthemum", 50);
+        itemInfoIndex.push(1004);
+        itemInfo[1005] = ItemInfo("Pink Rosa", 40);
+        itemInfoIndex.push(1005);
+        itemInfo[1006] = ItemInfo("Orange Rosa", 40);
+        itemInfoIndex.push(1006);
+        itemInfo[1007] = ItemInfo("Yellow Rosa", 40);
+        itemInfoIndex.push(1007);
+        itemInfo[1008] = ItemInfo("Red Rosa", 40);
+        itemInfoIndex.push(1008);
+        itemInfo[1009] = ItemInfo("White Rosa", 40);
+        itemInfoIndex.push(1009);
+        itemInfo[1010] = ItemInfo("Blue Rosa", 40);
+        itemInfoIndex.push(1010);
+
+        itemInfo[1101] = ItemInfo("Lilium", 25);
+        itemInfoIndex.push(1101);
+        itemInfo[1102] = ItemInfo("Black Rosa", 20);
+        itemInfoIndex.push(1102);
+        itemInfo[1103] = ItemInfo("Purple Rosa", 20);
+        itemInfoIndex.push(1103);
+        itemInfo[1104] = ItemInfo("Petunia", 25);
+        itemInfoIndex.push(1104);
+        itemInfo[1105] = ItemInfo("Tulipa", 20);
+        itemInfoIndex.push(1105);
+
+        itemInfo[1201] = ItemInfo("Jasmine", 12);
+        itemInfoIndex.push(1201);
+        itemInfo[1202] = ItemInfo("Calla Lily", 8);
+        itemInfoIndex.push(1202);
+        itemInfo[1203] = ItemInfo("Anemone", 5);
+        itemInfoIndex.push(1103);
+
+        // toy
+        itemInfo[2101] = ItemInfo("Bear", 20);
+        itemInfoIndex.push(2101);
+        itemInfo[2102] = ItemInfo("Cat", 15);
+        itemInfoIndex.push(2102);
+        itemInfo[2103] = ItemInfo("Dog", 15);
+        itemInfoIndex.push(2103);
+        itemInfo[2104] = ItemInfo("Rabbit", 15);
+        itemInfoIndex.push(2104);
+        itemInfo[2105] = ItemInfo("Monkey", 10);
+        itemInfoIndex.push(2105);
+
+
+        // Stone
+        itemInfo[3001] = ItemInfo("Agate", 5);
+        itemInfoIndex.push(3001);
+        itemInfo[3002] = ItemInfo("Coral stone", 10);
+        itemInfoIndex.push(3002);
+        itemInfo[3003] = ItemInfo("Amethyst Stone", 8);
+        itemInfoIndex.push(3003);
+
+        itemInfo[3101] = ItemInfo("Diamond", 1);
+        itemInfoIndex.push(3101);
+        itemInfo[3102] = ItemInfo("Painite", 1);
+        itemInfoIndex.push(3102);
+        itemInfo[3103] = ItemInfo("Jeremejevite", 1);
+        itemInfoIndex.push(3103);
+        itemInfo[3104] = ItemInfo("Beryl", 1);
+        itemInfoIndex.push(3104);
+        itemInfo[3105] = ItemInfo("Serendibite", 1);
+        itemInfoIndex.push(3105);
+        itemInfo[3106] = ItemInfo("Red Diamond", 1);
+        itemInfoIndex.push(3106);
+        itemInfo[3107] = ItemInfo("Jade", 1);
+        itemInfoIndex.push(3107);
+
+
+        // Jewelery
+        itemInfo[4001] = ItemInfo("Agate Ring", 1);
+        itemInfoIndex.push(4001);
+        itemInfo[4002] = ItemInfo("Coral Ring", 1);
+        itemInfoIndex.push(4002);
+        itemInfo[4003] = ItemInfo("Amethyst Ring", 1);
+        itemInfoIndex.push(4003);
+        itemInfo[4004] = ItemInfo("Engagement Ring", 1);
+        itemInfoIndex.push(4004);
+
+        itemInfo[4005] = ItemInfo("Silver Ring", 5);
+        itemInfoIndex.push(4005);
+        itemInfo[4006] = ItemInfo("Gold Ring", 2);
+        itemInfoIndex.push(4006);
+
+
+        itemInfo[4101] = ItemInfo("Painite Ring", 0);
+        itemInfoIndex.push(4101);
+        itemInfo[4102] = ItemInfo("Jeremejevite", 0);
+        itemInfoIndex.push(4102);
+        itemInfo[4103] = ItemInfo("Beryl Ring", 0);
+        itemInfoIndex.push(4103);
+        itemInfo[4104] = ItemInfo("Serendibite Ring", 0);
+        itemInfoIndex.push(4104);
+        itemInfo[4105] = ItemInfo("Red Diamond Ring", 0);
+        itemInfoIndex.push(4105);
+        itemInfo[4106] = ItemInfo("Jade Bear", 0);
+        itemInfoIndex.push(4106);
+        itemInfo[4107] = ItemInfo("Diamond Ring", 0);
+        itemInfoIndex.push(4107);
+
+
+
+        // Material
+        itemInfo[10001] = ItemInfo("Flask", 100);
+        itemInfoIndex.push(10001);
+        itemInfo[10002] = ItemInfo("Wool", 100);
+        itemInfoIndex.push(10002);
+        itemInfo[10003] = ItemInfo("Yarn", 70);
+        itemInfoIndex.push(10003);
+        itemInfo[10101] = ItemInfo("Fabric", 40);
+        itemInfoIndex.push(10101);
+        itemInfo[10102] = ItemInfo("Silver", 20);
+        itemInfoIndex.push(10102);
+        itemInfo[10301] = ItemInfo("Silk", 10);
+        itemInfoIndex.push(10301);
+        itemInfo[10302] = ItemInfo("Gold", 6);
+        itemInfoIndex.push(10302);
+
+    
+    
+        itemInfo[11001] = ItemInfo("Sewing kit", 3);
+        itemInfoIndex.push(11001);
+        itemInfo[11002] = ItemInfo("Turnery", 2);
+        itemInfoIndex.push(11002);
+        itemInfo[11003] = ItemInfo("Perfumer", 3);
+        itemInfoIndex.push(11003);
+
+
+        itemInfo[12001] = ItemInfo("Gardent", 1);
+        itemInfoIndex.push(12001);
+        itemInfo[12002] = ItemInfo("Mine", 1);
+        itemInfoIndex.push(12002);
+        itemInfo[12003] = ItemInfo("Sheep", 4);
+        itemInfoIndex.push(12003);
+
+    }
+ 
+    
+    function generateGift() external onlyOwner {
+        uint32 currentTimeDown = lastNewGift + newGiftTimedown;
+        uint32 currentTime = uint32(now);
+        require(currentTimeDown < now);
+        uint itemId;
+        for(uint i=0;i<newGiftCount;i++) {
+            itemId = items.push(Item(0,currentTime));
+            offers.push(Offer(itemId, newGiftPrice));
+        }
+        lastNewGift = lastNewGift + newGiftTimedown;
+    }
+    
+    function showOffers(uint32 model) external view returns (uint[]) {
+        uint[] memory result;
+        uint counter = 0;
+        for (uint i = 0; i < offers.length; i++) {
+            if (items[offers[i].item].model == model) {
+                result[counter] = i;
+                counter++;
+            }
+        }
+        return result;
+    }
+    
+    function showOffer(uint offerId) external view returns (Offer) {
+        Offer memory result = offers[offerId];
+        return result;
+    }
+
+    function showItem(uint itemId) external view returns (Item) {
+        return items[itemId];
+    }
+
+    function showItemInfo(uint32 itemInfoId) external view returns (ItemInfo) {
+        return itemInfo[itemInfoId];
+    }
+    
+    function buyOffer(uint[] offerIds, uint8 andopen) external payable {
+        uint totalPrice = 0;
+        uint8 zeroGiftOnly = 1;
+        for (uint i = 0; i < offerIds.length; i++) {
+            totalPrice += offers[i].price;
+            if (items[offers[i].item].model!=0) zeroGiftOnly = 0;
+        }
+        require(msg.value == totalPrice);
+        if (andopen == 1) require(zeroGiftOnly == 1);
+        
+        for (i = 0; i < offerIds.length; i++) {
+            itemToOwner[offers[i].item] = msg.sender;
+            if (andopen == 1) _openGift(offers[i].item);
+            _removeOffer(i);
+        }
+    }
+    
+    function _openGift(uint itemId) private {
+        uint maxRand = 0;
+        for (uint i = 0; i < itemInfoIndex.length; i++) {
+            maxRand += itemInfo[itemInfoIndex[i]].repetition;
+        }
+        uint rand = uint(keccak256(now+itemId)) % maxRand;
+        for (i = 0; i < itemInfoIndex.length; i++) {
+            if (rand < itemInfo[itemInfoIndex[i]].repetition) {
+                items[itemId].model = itemInfoIndex[i];
+                break;
+            }
+            rand -= itemInfo[itemInfoIndex[i]].repetition;
+        }
+    }
+
+    function openGift(uint itemId) external {
+        require(itemToOwner[itemId] == msg.sender);
+        _openGift(itemId);
+    }
+    
+    function _removeOffer(uint offerId) private {
+        require(offerId < offers.length);
+
+        for (uint i = offerId; i<offers.length-1; i++){
+            offers[i] = offers[i+1];
+        }
+        offers.length--;
+    }
+    
+    function makeOffer(uint[] itemId, uint price) external {
+        require(price >= lowerPrice);
+        uint8 iWonAll = 1;
+        for (uint i = 0; i < itemId.length; i++) {
+            if (itemToOwner[i] != msg.sender) iWonAll = 0;
+        }
+        require(iWonAll == 1);
+        
+        uint8 noItemInOffer = 1;
+        uint j;
+        for (i = 0; i < itemId.length; i++) 
+            for (j = 0; j < offers.length; j++) 
+                if (offers[j].item == i) noItemInOffer = 0;
+        require(noItemInOffer == 1);
+        
+        for (i = 0; i < itemId.length; i++) {
+            offers.push(Offer(i, price));
+        }
+    }
+    
+    function changeNewGiftCount(uint32 GiftCount) external onlyOwner {
+        newGiftCount = GiftCount;
+    }
+    
+    function newGiftprice(uint32 price) external onlyOwner {
+        newGiftPrice = price;
+    }
+    
+    function changeLowerPrice(uint32 price) external onlyOwner {
+        lowerPrice = price;
+    }
+
+    
+    function changeNewGiftTimedown(uint32 GiftTimedown) external onlyOwner {
+        newGiftTimedown = GiftTimedown;
+    }
+
+}
